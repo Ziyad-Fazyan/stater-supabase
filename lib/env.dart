@@ -1,6 +1,6 @@
 class Env {
-  static String projectId = "degzuakxifhgfvlokvnf";
-  static String url = "https://degzuakxifhgfvlokvnf.supabase.co";
+  static String projectId = "utknwwxmkzmpthzzbrgn";
+  static String url = "https://utknwwxmkzmpthzzbrgn.supabase.co";
   static String anonPublic =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZ3p1YWt4aWZoZ2Z2bG9rdm5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0NTUwOTYsImV4cCI6MjA2MzAzMTA5Nn0.N1o1JWHyl_vcZDDFSBsc7WCMnSO4BZlrsZ5Xsg0Ib_o";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0a253d3hta3ptcHRoenpicmduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE1NzIzMTMsImV4cCI6MjA1NzE0ODMxM30.9vjbyi1nwgp-QpO4GkxP3INudVhwrwehvOrQa1UJk4Y";
 }

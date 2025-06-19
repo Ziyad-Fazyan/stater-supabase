@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:reusekit/core/widget/hyper_ui/navigation/qnavigation.dart';
+import 'package:reusekit/core.dart';
+import 'package:reusekit/presentation/home_view.dart';
 import 'package:reusekit/presentation/profile_view.dart';
+import 'package:reusekit/presentation/students_view.dart';
+import 'package:reusekit/presentation/invitations_view.dart';
 
 class MainNavigationView extends StatefulWidget {
   const MainNavigationView({super.key});
@@ -18,28 +21,22 @@ class _MainNavigationViewState extends State<MainNavigationView> {
         NavigationMenu(
           icon: Icons.dashboard,
           label: "Dashboard",
-          view: Container(
-            color: Colors.red,
-          ),
+          view: const HomeView(),
         ),
         NavigationMenu(
-          icon: Icons.list,
-          label: "Order",
-          view: Container(
-            color: Colors.red,
-          ),
+          icon: Icons.school,
+          label: "Students",
+          view: const StudentsView(),
         ),
         NavigationMenu(
-          icon: Icons.favorite,
-          label: "Favorite",
-          view: Container(
-            color: Colors.red,
-          ),
+          icon: Icons.mail,
+          label: "Invitations",
+          view: const InvitationsView(),
         ),
         NavigationMenu(
           icon: Icons.person,
           label: "Profile",
-          view: ProfileView(),
+          view: const ProfileView(),
         ),
       ],
     );

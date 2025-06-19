@@ -32,11 +32,7 @@ class _ProfileViewState extends State<ProfileView> {
     });
 
     try {
-      final user = await getUserData();
-      setState(() {
-        name = user['name'];
-        email = user['email'];
-      });
+      // final user = await getUserData();
     } catch (err) {
       se("Gagal memuat data profil: $err");
     } finally {
@@ -46,9 +42,9 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  Future<Map<String, dynamic>> getUserData() async {
-    return await AuthService().getUserData();
-  }
+  // Future<Map<String, dynamic>> getUserData() async {
+  //   return await AuthService().getUserData();
+  // }
 
   Future<void> updateProfile() async {
     bool isNotValid = formKey.currentState!.validate() == false;
@@ -61,10 +57,10 @@ class _ProfileViewState extends State<ProfileView> {
     });
 
     try {
-      await AuthService().updateProfile(
-        name: name!,
-        email: email!,
-      );
+      // await AuthService().updateProfile(
+      //   name: name!,
+      //   email: email!,
+      // );
 
       setState(() {
         isEditing = false;
