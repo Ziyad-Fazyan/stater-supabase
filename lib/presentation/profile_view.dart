@@ -31,7 +31,9 @@ class _ProfileViewState extends State<ProfileView> {
   Future<void> _loadUserData() async {
     setState(() => _isLoading = true);
     try {
+      print("ProfileView: Loading user data for adminId: \${widget.adminId}");
       final user = await AuthService().getAdminData(widget.adminId);
+      print("ProfileView: User data fetched: \$user");
       _name = user['name'];
       _email = user['email'];
     } catch (err) {

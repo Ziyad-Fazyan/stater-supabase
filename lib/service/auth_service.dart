@@ -1,6 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
+  static const String _adminIdKey = 'adminId';
+
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -24,6 +27,10 @@ class AuthService {
         print("❌ AuthService: Password mismatch for email: $email");
         throw Exception('Email atau password salah');
       }
+
+      // Save adminId to shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_adminIdKey, response['id']);
 
       print("🎉 AuthService: Login successful for admin: ${response['name']}");
       return {
@@ -49,6 +56,12 @@ class AuthService {
       print("   Error Type: ${err.runtimeType}");
       throw Exception('Terjadi kesalahan yang tidak diketahui: $err');
     }
+  }
+
+  String? getCurrentAdminId() {
+    final user = Supabase.instance.client.auth.currentUser;
+    print("AuthService: Current admin ID: \${user?.id}");
+    return user?.id;
   }
 
   // Method ini tidak diperlukan untuk admin login
