@@ -26,7 +26,10 @@ class AuthService {
       }
 
       print("🎉 AuthService: Login successful for admin: ${response['name']}");
-      return response;
+      return {
+        "success": true,
+        "data": response,
+      };
     } on PostgrestException catch (err) {
       print("🚨 AuthService PostgrestException:");
       print("   Code: ${err.code}");

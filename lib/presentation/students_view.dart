@@ -12,6 +12,14 @@ class _StudentsViewState extends State<StudentsView> {
   final supabase = Supabase.instance.client;
   bool loading = true;
   List students = [];
+  String searchQuery = "";
+  List<Map<String, dynamic>> get filteredStudents => searchQuery.isEmpty
+      ? List<Map<String, dynamic>>.from(students)
+      : List<Map<String, dynamic>>.from(students)
+          .where((student) =>
+              student['name'].toString().toLowerCase().contains(searchQuery.toLowerCase()) ||
+              (student['student_number']?.toString().toLowerCase() ?? "").contains(searchQuery.toLowerCase()))
+          .toList();
 
   @override
   void initState() {
@@ -33,6 +41,42 @@ class _StudentsViewState extends State<StudentsView> {
   Future<void> deleteStudent(String id) async {
     await supabase.from('students').delete().eq('id', id);
     await loadStudents();
+  }
+
+  String getInitials(String name) {
+    if (name.isEmpty) return "";
+    List<String> nameParts = name.split(" ");
+    if (nameParts.length > 1) {
+      return nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+
+  void showDeleteConfirmationDialog(Map<String, dynamic> student) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Student"),
+        content: Text("Are you sure you want to delete ${student['name']}?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              await deleteStudent(student['id']);
+            },
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
   }
 
   void showStudentForm({Map<String, dynamic>? student}) {
@@ -155,154 +199,248 @@ class _StudentsViewState extends State<StudentsView> {
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Students',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, size: 28),
-            onPressed: () => showStudentForm(),
-            tooltip: 'Add Student',
-          ),
-        ],
+        title: const Text("Students"),
+        actions: const [],
       ),
-      body: students.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.people_outline, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No students found',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () => showStudentForm(),
-                    child: const Text('Add Student'),
-                  ),
-                ],
-              ),
+      body: loading
+          ? const Center(
+              child: CircularProgressIndicator(),
             )
-          : Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListView.separated(
-                itemCount: students.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final student = students[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor:
-                            Theme.of(context).primaryColor.withOpacity(0.2),
-                        foregroundColor: Theme.of(context).primaryColor,
-                        child: Text(
-                          student['name'][0].toUpperCase(),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      title: Text(
-                        student['name'],
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          Text(
-                            student['phone'],
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                          if (student['student_number'] != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'ID: ${student['student_number']}',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 12,
-                                ),
+          : RefreshIndicator(
+              onRefresh: () async {
+                await loadStudents();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Student List",
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "${students.length} students registered",
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
                               ),
                             ),
-                        ],
+                          ],
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            showStudentForm();
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text("Add Student"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Search Bar
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.grey[300]!),
                       ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              Icons.edit,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            onPressed: () =>
-                                showStudentForm(student: student),
-                            tooltip: 'Edit',
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete,
-                              color: Colors.red,
-                            ),
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Confirm Delete'),
-                                  content: Text(
-                                      'Delete student "${student['name']}"?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        foregroundColor: Colors.white,
-                                      ),
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: const Text('Delete'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                await deleteStudent(student['id']);
-                              }
-                            },
-                            tooltip: 'Delete',
-                          ),
-                        ],
+                      child: TextField(
+                        onChanged: (value) {
+                          // Implement search functionality
+                          setState(() {
+                            searchQuery = value.toLowerCase();
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          hintText: "Search students...",
+                          prefixIcon: Icon(Icons.search),
+                          border: InputBorder.none,
+                        ),
                       ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 20),
+                    
+                    // Student List
+                    Expanded(
+                      child: students.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.people_outline,
+                                    size: 80,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    "No students found",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Add your first student to get started",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[500],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      showStudentForm();
+                                    },
+                                    icon: const Icon(Icons.add),
+                                    label: const Text("Add Student"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).primaryColor,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: filteredStudents.length,
+                              separatorBuilder: (context, index) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final student = filteredStudents[index];
+                                return Card(
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    leading: CircleAvatar(
+                                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                                      child: Text(
+                                        getInitials(student["name"]),
+                                        style: TextStyle(
+                                          color: Theme.of(context).primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    title: Text(
+                                      "${student["name"]}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.phone,
+                                              size: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "${student["phone"]}",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[700],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.numbers,
+                                              size: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "Student ID: ${student["student_number"]}",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[700],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            color: Colors.blue,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            showStudentForm(student: student);
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            showDeleteConfirmationDialog(student);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
       floatingActionButton: students.isEmpty
           ? null
           : FloatingActionButton(
-              onPressed: () => showStudentForm(),
+              onPressed: () {
+                showStudentForm();
+              },
+              backgroundColor: Theme.of(context).primaryColor,
               child: const Icon(Icons.add),
             ),
     );
