@@ -7,7 +7,9 @@ import 'package:reusekit/service/auth_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProfileView extends StatefulWidget {
-  const ProfileView({super.key});
+  final String adminId;
+
+  const ProfileView({super.key, required this.adminId});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -29,9 +31,9 @@ class _ProfileViewState extends State<ProfileView> {
   Future<void> _loadUserData() async {
     setState(() => _isLoading = true);
     try {
-      // final user = await AuthService().getUserData();
-      // _name = user['name'];
-      // _email = user['email'];
+      final user = await AuthService().getAdminData(widget.adminId);
+      _name = user['name'];
+      _email = user['email'];
     } catch (err) {
       se("Failed to load profile: $err");
     } finally {
@@ -44,7 +46,11 @@ class _ProfileViewState extends State<ProfileView> {
 
     setState(() => _isLoading = true);
     try {
-      // await AuthService().updateProfile(name: _name!, email: _email!);
+      await AuthService().updateProfile(
+        adminId: widget.adminId,
+        name: _name!,
+        email: _email!,
+      );
       setState(() => _isEditing = false);
       ss("Profile updated successfully!");
     } on Exception catch (err) {
@@ -117,12 +123,12 @@ class _ProfileViewState extends State<ProfileView> {
                     // Profile Header
                     _buildProfileHeader(theme),
                     const SizedBox(height: 32),
-                    
+
                     // Personal Information
                     _buildSectionTitle("Personal Information", theme),
                     const SizedBox(height: 16),
                     _buildProfileForm(theme),
-                    
+
                     // Account Settings
                     const SizedBox(height: 32),
                     _buildSectionTitle("Account Settings", theme),
@@ -223,142 +229,142 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
- Widget _buildAccountSettings(ThemeData theme, ColorScheme colors) {
-  final mainAppState = GetIt.I<MainAppState>();
-  
-  return Card(
-    elevation: 0,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(
-        color: colors.outline.withOpacity(0.2),
-        width: 1,
-      ),
-    ),
-    margin: const EdgeInsets.symmetric(horizontal: 4),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Column(
-        children: [
-          _buildSettingItem(
-            icon: Icons.lock_outline,
-            title: "Change Password",
-            subtitle: "Update your account security",
-            color: colors.primary,
-            onTap: () => sw("Feature coming soon!"),
-            theme: theme,
-          ),
-          _buildDivider(colors),
-          _buildSettingItem(
-            icon: Icons.translate,
-            title: "App Language",
-            subtitle: "Current: ${mainAppState.currentLocale.toUpperCase()}",
-            color: colors.primary,
-            onTap: () {
-              final newLocale = mainAppState.currentLocale == "en" 
-                ? const Locale("ko")
-                : mainAppState.currentLocale == "ko"
-                  ? const Locale("id")
-                  : const Locale("en");
-              mainAppState.changeLocale(newLocale);
-              setState(() {});
-            },
-            theme: theme,
-          ),
-          _buildDivider(colors),
-          _buildSettingItem(
-            icon: Icons.exit_to_app,
-            title: "Sign Out",
-            subtitle: "Log out from this device",
-            color: colors.error,
-            onTap: _showLogoutConfirmation,
-            theme: theme,
-            isDestructive: true,
-          ),
-        ],
-      ),
-    ),
-  );
-}
+  Widget _buildAccountSettings(ThemeData theme, ColorScheme colors) {
+    final mainAppState = GetIt.I<MainAppState>();
 
-Widget _buildDivider(ColorScheme colors) {
-  return Divider(
-    height: 1,
-    thickness: 1,
-    indent: 16,
-    endIndent: 16,
-    color: colors.outline.withOpacity(0.1),
-  );
-}
-
-Widget _buildSettingItem({
-  required IconData icon,
-  required String title,
-  String? subtitle,
-  required Color color,
-  required VoidCallback onTap,
-  required ThemeData theme,
-  bool isDestructive = false,
-}) {
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onTap,
-      splashColor: isDestructive 
-          ? theme.colorScheme.error.withOpacity(0.1)
-          : theme.colorScheme.primary.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colors.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 20,
-              ),
+            _buildSettingItem(
+              icon: Icons.lock_outline,
+              title: "Change Password",
+              subtitle: "Update your account security",
+              color: colors.primary,
+              onTap: () => sw("Feature coming soon!"),
+              theme: theme,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: isDestructive 
-                          ? theme.colorScheme.error 
-                          : theme.textTheme.bodyLarge?.color,
-                    ),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+            _buildDivider(colors),
+            _buildSettingItem(
+              icon: Icons.translate,
+              title: "App Language",
+              subtitle: "Current: ${mainAppState.currentLocale.toUpperCase()}",
+              color: colors.primary,
+              onTap: () {
+                final newLocale = mainAppState.currentLocale == "en"
+                    ? const Locale("ko")
+                    : mainAppState.currentLocale == "ko"
+                        ? const Locale("id")
+                        : const Locale("en");
+                mainAppState.changeLocale(newLocale);
+                setState(() {});
+              },
+              theme: theme,
             ),
-            Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
-              size: 20,
+            _buildDivider(colors),
+            _buildSettingItem(
+              icon: Icons.exit_to_app,
+              title: "Sign Out",
+              subtitle: "Log out from this device",
+              color: colors.error,
+              onTap: _showLogoutConfirmation,
+              theme: theme,
+              isDestructive: true,
             ),
           ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildDivider(ColorScheme colors) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 16,
+      endIndent: 16,
+      color: colors.outline.withOpacity(0.1),
+    );
+  }
+
+  Widget _buildSettingItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required Color color,
+    required VoidCallback onTap,
+    required ThemeData theme,
+    bool isDestructive = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: isDestructive
+            ? theme.colorScheme.error.withOpacity(0.1)
+            : theme.colorScheme.primary.withOpacity(0.1),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: isDestructive
+                            ? theme.colorScheme.error
+                            : theme.textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurface.withOpacity(0.3),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

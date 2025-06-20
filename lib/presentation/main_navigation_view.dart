@@ -36,7 +36,7 @@ class _MainNavigationViewState extends State<MainNavigationView> {
         NavigationMenu(
           icon: Icons.person,
           label: "Profile",
-          view: const ProfileView(),
+          view: ProfileView(adminId: 'current-admin-id'),
         ),
       ],
     );
