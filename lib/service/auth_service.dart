@@ -143,4 +143,42 @@ class AuthService {
       throw Exception('Gagal mengambil data admin: $err');
     }
   }
+
+  Future<void> changePassword({
+    required String adminId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      print("🔄 AuthService: Changing password for admin ID: $adminId");
+
+      // Verifikasi password saat ini
+      final admin = await Supabase.instance.client
+          .from("admins")
+          .select()
+          .eq("id", adminId)
+          .single();
+
+      if (admin['password'] != currentPassword) {
+        throw Exception('Password saat ini tidak sesuai');
+      }
+
+      // Update password baru
+      await Supabase.instance.client.from("admins").update({
+        "password": newPassword,
+        "updated_at": DateTime.now().toIso8601String(),
+      }).eq("id", adminId);
+
+      print("✅ AuthService: Password changed successfully");
+    } on PostgrestException catch (err) {
+      print("🚨 AuthService changePassword PostgrestException:");
+      print("   Code: ${err.code}");
+      print("   Message: ${err.message}");
+      print("   Details: ${err.details}");
+      throw Exception('Database error: ${err.message}');
+    } catch (err) {
+      print("🚨 AuthService changePassword Error: $err");
+      throw Exception('Gagal mengubah password: $err');
+    }
+  }
 }

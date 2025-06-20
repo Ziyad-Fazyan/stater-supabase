@@ -98,6 +98,104 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
+  void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text("Ubah Password"),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                QTextField(
+                  label: "Password Saat Ini",
+                  controller: currentPasswordController,
+                  obscureText: true,
+                  validator: Validator.required,
+                  prefixIcon: Icons.lock_outline, onChanged: (String ) {  },
+                ),
+                const SizedBox(height: 16),
+                QTextField(
+                  label: "Password Baru",
+                  controller: newPasswordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Password baru wajib diisi";
+                    }
+                    if (value.length < 6) {
+                      return "Password minimal 6 karakter";
+                    }
+                    return null;
+                  },
+                  prefixIcon: Icons.lock, onChanged: (String ) {  },
+                ),
+                const SizedBox(height: 16),
+                QTextField(
+                  label: "Konfirmasi Password Baru",
+                  controller: confirmPasswordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Konfirmasi password wajib diisi";
+                    }
+                    if (value != newPasswordController.text) {
+                      return "Password tidak cocok";
+                    }
+                    return null;
+                  },
+                  prefixIcon: Icons.lock_reset, onChanged: (String ) {  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            if (isLoading)
+              const CircularProgressIndicator()
+            else
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  if (formKey.currentState?.validate() != true) return;
+                  
+                  setState(() => isLoading = true);
+                  try {
+                    await AuthService().changePassword(
+                      adminId: widget.adminId,
+                      currentPassword: currentPasswordController.text,
+                      newPassword: newPasswordController.text,
+                    );
+                    Navigator.pop(context);
+                    ss("Password berhasil diubah!");
+                  } catch (e) {
+                    se("Gagal mengubah password: $e");
+                  } finally {
+                    setState(() => isLoading = false);
+                  }
+                },
+                child: const Text("Simpan"),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context)!;
@@ -253,7 +351,7 @@ class _ProfileViewState extends State<ProfileView> {
               title: "Change Password",
               subtitle: "Update your account security",
               color: colors.primary,
-              onTap: () => sw("Feature coming soon!"),
+              onTap: _showChangePasswordDialog,
               theme: theme,
             ),
             _buildDivider(colors),
